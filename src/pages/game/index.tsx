@@ -1,11 +1,16 @@
-import { FC, useRef } from 'react';
+import { FC, useRef, useState } from 'react';
 import Canvas from '../../widgets/game/canvas';
-import styles from './index.module.scss';
+import './index.scss';
 import ControlPanel from '../../widgets/game/control/СontrolPanel.tsx';
 import Hero from '../../entities/game/Hero.ts';
 import { colors } from '../../shared/config/styles/variables.ts';
+import ColorModal from '../../widgets/game/control/ColorModal.tsx';
 
 const Game: FC = () => {
+  const [selectedHeroIndex, setSelectedHeroIndex] = useState<number | null>(
+    null,
+  );
+  const [isModalOpen, setModalOpen] = useState(false);
   const heroesRef = useRef<Hero[]>([
     new Hero({
       x: 0,
@@ -43,12 +48,31 @@ const Game: FC = () => {
     );
   };
 
+  const handleCloseModal = () => {
+    setSelectedHeroIndex(null);
+    setModalOpen(false);
+  };
+
+  const handleColorChange = (color: string) => {
+    if (selectedHeroIndex) {
+      heroesRef.current[selectedHeroIndex].projectileColor = color;
+      handleCloseModal();
+    }
+  };
+
   return (
     <>
-      <div className={styles.gameContainer}>
-        <Canvas heroes={heroesRef.current} />
+      <div className="gameContainer">
+        <Canvas
+          heroes={heroesRef.current}
+          setModalOpen={setModalOpen}
+          setSelectedHeroIndex={setSelectedHeroIndex}
+        />
       </div>
-      <div className={styles.gameController}>
+      <h3 className="click-info">
+        Click on the hero to change the color of the spell
+      </h3>
+      <div className="gameController">
         {heroesRef.current.map((hero, index) => (
           <div key={index}>
             <h3>Hero {index}</h3>
@@ -64,6 +88,14 @@ const Game: FC = () => {
           </div>
         ))}
       </div>
+      {selectedHeroIndex !== null && (
+        <ColorModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onColorChange={handleColorChange}
+          initialColor={heroesRef.current[selectedHeroIndex].projectileColor}
+        />
+      )}
     </>
   );
 };
