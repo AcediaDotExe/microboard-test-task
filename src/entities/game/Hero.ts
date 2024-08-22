@@ -21,6 +21,7 @@ class Hero implements IHero {
   projectileColor: string;
   projectileDirection: number;
   projectiles: Projectile[] = [];
+  hits: number;
   shootInterval: ReturnType<typeof setInterval>;
 
   radius: number = 10;
@@ -44,11 +45,16 @@ class Hero implements IHero {
     this.projectileColor = projectileColor;
     this.direction = 1;
     this.projectileDirection = projectileDirection;
+    this.hits = 0;
     this.shoot = this.shoot.bind(this);
     this.shootInterval = setInterval(
       () => this.shoot(),
       1000 / this.shootingFrequency,
     );
+  }
+
+  increaseHitCount() {
+    this.hits += 1;
   }
 
   update(

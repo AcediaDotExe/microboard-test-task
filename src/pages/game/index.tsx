@@ -54,8 +54,10 @@ const Game: FC = () => {
   };
 
   const handleColorChange = (color: string) => {
-    heroesRef.current[selectedHeroIndex].projectileColor = color;
-    handleCloseModal();
+    if (selectedHeroIndex) {
+      heroesRef.current[selectedHeroIndex].projectileColor = color;
+      handleCloseModal();
+    }
   };
 
   return (
