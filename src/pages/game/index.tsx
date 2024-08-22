@@ -10,11 +10,12 @@ const Game: FC = () => {
   const [selectedHeroIndex, setSelectedHeroIndex] = useState<number | null>(
     null,
   );
+  const [score, setScore] = useState<Array<number>>([0, 0]);
   const [isModalOpen, setModalOpen] = useState(false);
   const heroesRef = useRef<Hero[]>([
     new Hero({
       x: 0,
-      y: 0,
+      y: 10,
       color: colors.primary,
       shootingFrequency: 5,
       projectileColor: colors.secondary,
@@ -23,7 +24,7 @@ const Game: FC = () => {
     }),
     new Hero({
       x: 0,
-      y: 0,
+      y: 10,
       color: colors.primary,
       shootingFrequency: 5,
       projectileColor: colors.secondary,
@@ -54,22 +55,27 @@ const Game: FC = () => {
   };
 
   const handleColorChange = (color: string) => {
-    if (selectedHeroIndex) {
+    if (selectedHeroIndex !== null) {
       heroesRef.current[selectedHeroIndex].projectileColor = color;
-      handleCloseModal();
     }
+    handleCloseModal();
   };
 
   return (
     <>
+      <h1 className="alignCenter">
+        Score <br />
+        {score[1]} | {score[0]}
+      </h1>
       <div className="gameContainer">
         <Canvas
           heroes={heroesRef.current}
           setModalOpen={setModalOpen}
           setSelectedHeroIndex={setSelectedHeroIndex}
+          setScore={setScore}
         />
       </div>
-      <h3 className="click-info">
+      <h3 className="alignCenter">
         Click on the hero to change the color of the spell
       </h3>
       <div className="gameController">
