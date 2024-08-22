@@ -14,12 +14,14 @@ interface CanvasProps {
   heroes: Hero[];
   setSelectedHeroIndex: Dispatch<SetStateAction<number | null>>;
   setModalOpen: Dispatch<SetStateAction<boolean>>;
+  setScore: Dispatch<SetStateAction<Array<number>>>;
 }
 
 const Canvas: FC<CanvasProps> = ({
   heroes,
   setSelectedHeroIndex,
   setModalOpen,
+  setScore,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mousePosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -55,7 +57,7 @@ const Canvas: FC<CanvasProps> = ({
           // Обновление и отрисовка героев
           if (heroes) {
             heroes.forEach((hero) => {
-              hero.update(ctx, canvas, heroes);
+              hero.update(ctx, canvas, heroes, setScore);
             });
           }
 
@@ -66,7 +68,7 @@ const Canvas: FC<CanvasProps> = ({
         update();
       }
     }
-  }, [heroes]);
+  }, [heroes, setScore]);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -125,7 +127,7 @@ const Canvas: FC<CanvasProps> = ({
         // Проверка на попадание героя в зону силового поля
         if (distance < fieldRadius) {
           setSelectedHeroIndex(index);
-          setModalOpen((prevState) => !prevState);
+          setModalOpen(true);
         }
       });
     }

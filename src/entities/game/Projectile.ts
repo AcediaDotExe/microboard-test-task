@@ -1,6 +1,7 @@
 // src/entities/Projectile.ts
 
 import Hero from './Hero.ts';
+import { Dispatch, SetStateAction } from 'react';
 
 export interface IProjectile {
   x: number;
@@ -20,6 +21,7 @@ class Projectile implements IProjectile {
   startAngle: number = 0;
   endAngle: number = 2 * Math.PI;
   direction: number; // Направление движения по оси Y
+  isRemoved: boolean;
 
   constructor({ x, y, color, speed, direction }: IProjectile) {
     this.x = x;
@@ -27,12 +29,14 @@ class Projectile implements IProjectile {
     this.color = color;
     this.speed = speed;
     this.direction = direction; // Изначально направлен вверх, можно изменить в зависимости от нужд
+    this.isRemoved = false;
   }
 
   update(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
     heroes: Hero[],
+    setScore: Dispatch<SetStateAction<Array<number>>>,
   ) {
     // Обновление позиции заклинания
     this.x += this.speed * this.direction;
@@ -43,28 +47,32 @@ class Projectile implements IProjectile {
       return;
     }
 
+    heroes.forEach((hero, heroIndex) => {
+      const distanceX = this.x - hero.x;
+      const distanceY = this.y - hero.y;
+      const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+      if (distance < hero.radius + this.radius) {
+        hero.increaseHitCount();
+        setScore((prevScores) => {
+          const newScores = [...prevScores];
+          newScores[heroIndex] = hero.hits;
+          return newScores;
+        });
+        this.remove();
+      }
+    });
+
     // Отрисовка заклинания
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, this.startAngle, this.endAngle);
     ctx.fillStyle = this.color;
     ctx.fill();
     ctx.closePath();
-
-    // Проверка столкновений с героями
-    heroes.forEach((hero) => {
-      const distance = Math.sqrt(
-        (this.x - hero.x) ** 2 + (this.y - hero.y) ** 2,
-      );
-      if (distance < this.radius + 20) {
-        // Учитываем радиус героя
-        this.remove(); // Удаление заклинания при столкновении с героем
-      }
-    });
   }
 
   remove() {
-    // Логика для удаления или пометки заклинания как удаленного
-    // В этой версии, метод просто не будет вызываться повторно в update
+    this.isRemoved = true;
   }
 }
 

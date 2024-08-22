@@ -1,5 +1,6 @@
 // src/entities/Hero.ts
 import Projectile from './Projectile.ts';
+import { Dispatch, SetStateAction } from 'react';
 
 export interface IHero {
   x: number;
@@ -61,11 +62,14 @@ class Hero implements IHero {
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
     heroes: Hero[],
+    setScore: Dispatch<SetStateAction<Array<number>>>,
   ) {
+    this.projectiles = this.projectiles.filter(
+      (projectile) => !projectile.isRemoved,
+    );
     // Обновление и отрисовка заклинаний
     this.projectiles.forEach((projectile, index) => {
-      projectile.update(ctx, canvas, heroes);
-
+      projectile.update(ctx, canvas, heroes, setScore);
       // Логика столкновения заклинания с границей
       if (projectile.y <= 0 || projectile.y >= canvas.height) {
         this.projectiles.splice(index, 1); // Удаление заклинания при выходе за границу
@@ -88,10 +92,10 @@ class Hero implements IHero {
 
   shoot() {
     const projectile = new Projectile({
-      x: this.x,
+      x: this.x + this.projectileDirection * this.radius * 2,
       y: this.y,
       color: this.projectileColor,
-      speed: 2,
+      speed: 1,
       direction: this.projectileDirection,
     });
     this.projectiles.push(projectile);
