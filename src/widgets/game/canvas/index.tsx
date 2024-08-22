@@ -3,39 +3,23 @@ import { colors } from '../../../shared/config/styles/variables.ts';
 import './index.module.scss';
 import Hero from '../../../entities/game/Hero.ts';
 
-const Canvas: FC = () => {
+interface CanvasProps {
+  heroes: Hero[];
+}
+
+const Canvas: FC<CanvasProps> = ({ heroes }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const heroesRef = useRef<Hero[]>([
-    new Hero({
-      x: 0,
-      y: 0,
-      color: colors.primary,
-      shootingFrequency: 5,
-      projectileColor: colors.secondary,
-      speed: 0.5,
-      projectileDirection: 1,
-    }),
-    new Hero({
-      x: 0,
-      y: 0,
-      color: colors.primary,
-      shootingFrequency: 5,
-      projectileColor: colors.secondary,
-      speed: 0.1,
-      projectileDirection: -1,
-    }),
-  ]);
+  const mousePosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      heroesRef.current[0].x = 30;
-      heroesRef.current[1].x = canvas.width - 30;
-      draw(); // Перерисовать после изменения размера
+    if (canvas && heroes) {
+      canvas.width = window.innerWidth - window.innerWidth / 5;
+      canvas.height = window.innerHeight - window.innerHeight / 3;
+      heroes[0].x = 50;
+      heroes[1].x = canvas.width - 50;
     }
-  }, []);
+  }, [heroes]);
 
   useEffect(() => {
     resizeCanvas(); // Устанавливаем размер при монтировании
@@ -43,36 +27,24 @@ const Canvas: FC = () => {
     return () => window.removeEventListener('resize', resizeCanvas);
   }, [resizeCanvas]);
 
-  const draw = () => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Пример рисования круга
-        ctx.beginPath();
-        ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
-        ctx.fillStyle = 'blue';
-        ctx.fill();
-      }
-    }
-  };
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = colors.background;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         const update = () => {
           // Очистка канваса перед каждой отрисовкой
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
           // Обновление и отрисовка героев
-          heroesRef.current.forEach((hero) => {
-            hero.update(ctx, canvas, heroesRef.current);
-          });
+          if (heroes) {
+            heroes.forEach((hero) => {
+              hero.update(ctx, canvas, heroes);
+            });
+          }
 
           // Запрос следующего кадра
           requestAnimationFrame(update);
@@ -81,19 +53,18 @@ const Canvas: FC = () => {
         update();
       }
     }
-  }, []);
+  }, [heroes]);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
-      const { clientX, clientY } = event;
-      heroesRef.current.forEach((hero) => {
-        if (
-          Math.abs(hero.x - clientX) < 30 &&
-          Math.abs(hero.y - clientY) < 30
-        ) {
-          hero.direction *= -1; // Отталкивание от курсора
-        }
-      });
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        mousePosition.current = {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        };
+      }
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -102,6 +73,31 @@ const Canvas: FC = () => {
       document.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
+
+  useEffect(() => {
+    const checkProximity = () => {
+      if (heroes) {
+        heroes.forEach((hero) => {
+          const distanceX = hero.x - mousePosition.current.x;
+          const distanceY = hero.y - mousePosition.current.y;
+          const distance = Math.sqrt(
+            distanceX * distanceX + distanceY * distanceY,
+          );
+
+          const fieldRadius = 30; // радиус силового поля вокруг курсора
+
+          // Проверка на попадание героя в зону силового поля
+          if (distance < fieldRadius) {
+            hero.direction *= -1; // Меняем направление героя на противоположное
+          }
+        });
+      }
+    };
+
+    const intervalId = setInterval(checkProximity, 50); // Проверяем каждые 100 мс
+
+    return () => clearInterval(intervalId);
+  }, [heroes]);
 
   return <canvas ref={canvasRef} />;
 };
