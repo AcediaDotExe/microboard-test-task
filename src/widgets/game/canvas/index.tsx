@@ -1,13 +1,26 @@
-import { FC, useCallback, useEffect, useRef } from 'react';
+import {
+  Dispatch,
+  FC,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react';
 import { colors } from '../../../shared/config/styles/variables.ts';
-import './index.module.scss';
+import './index.scss';
 import Hero from '../../../entities/game/Hero.ts';
 
 interface CanvasProps {
   heroes: Hero[];
+  setSelectedHeroIndex: Dispatch<SetStateAction<number | null>>;
+  setModalOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-const Canvas: FC<CanvasProps> = ({ heroes }) => {
+const Canvas: FC<CanvasProps> = ({
+  heroes,
+  setSelectedHeroIndex,
+  setModalOpen,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mousePosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -99,7 +112,26 @@ const Canvas: FC<CanvasProps> = ({ heroes }) => {
     return () => clearInterval(intervalId);
   }, [heroes]);
 
-  return <canvas ref={canvasRef} />;
+  const handleMouseClick = () => {
+    if (heroes) {
+      heroes.forEach((hero, index) => {
+        const distanceX = hero.x - mousePosition.current.x;
+        const distanceY = hero.y - mousePosition.current.y;
+        const distance = Math.sqrt(
+          distanceX * distanceX + distanceY * distanceY,
+        );
+
+        const fieldRadius = 70; // радиус силового поля вокруг курсора
+        // Проверка на попадание героя в зону силового поля
+        if (distance < fieldRadius) {
+          setSelectedHeroIndex(index);
+          setModalOpen((prevState) => !prevState);
+        }
+      });
+    }
+  };
+
+  return <canvas ref={canvasRef} onClick={() => handleMouseClick()} />;
 };
 
 export default Canvas;
