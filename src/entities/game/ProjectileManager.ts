@@ -10,7 +10,7 @@ class ProjectileManager {
     this.projectileDirection = projectileDirection;
   }
 
-  addProjectile(x, y, heroRadius, speed) {
+  addProjectile(x: number, y: number, heroRadius: number, speed: number) {
     const startRangeMultiplier = 2;
     const projectile = new Projectile({
       x: x + this.projectileDirection * heroRadius * startRangeMultiplier,
@@ -25,17 +25,12 @@ class ProjectileManager {
   updateProjectiles(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
-    heroes: Hero[],
+    heroes: ReadonlyArray<Hero>,
   ) {
     this.deleteInactiveProjectiles();
     if (this.projectiles.length !== 0) {
       this.projectiles.forEach((projectile: Projectile, index) => {
-        this.deleteOutOfBoundsProjectile(
-          this.projectiles,
-          projectile,
-          canvas,
-          index,
-        );
+        this.deleteOutOfBoundsProjectile(projectile, canvas, index);
         projectile.update(ctx, canvas, heroes);
       });
     }
@@ -45,7 +40,11 @@ class ProjectileManager {
     this.projectiles = this.projectiles.filter((p) => !p.isActive);
   }
 
-  private deleteOutOfBoundsProjectile(projectiles, projectile, canvas, index) {
+  private deleteOutOfBoundsProjectile(
+    projectile: Projectile,
+    canvas: HTMLCanvasElement,
+    index: number,
+  ) {
     if (projectile.y <= 0 || projectile.y >= canvas.height) {
       this.projectiles.splice(index, 1);
     }
