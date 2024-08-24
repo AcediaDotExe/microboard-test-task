@@ -1,9 +1,7 @@
-// src/entities/Projectile.ts
-
-import Hero from './Hero.ts';
 import { Dispatch, SetStateAction } from 'react';
+import { Hero } from './index.ts';
 
-export interface IProjectile {
+interface ProjectileParams {
   x: number;
   y: number;
   color: string;
@@ -11,25 +9,25 @@ export interface IProjectile {
   direction: number;
 }
 
-class Projectile implements IProjectile {
+class Projectile {
   x: number;
   y: number;
-  color: string;
-  speed: number;
+  private color: string;
+  private speed: number;
 
-  radius: number = 4;
-  startAngle: number = 0;
-  endAngle: number = 2 * Math.PI;
-  direction: number; // Направление движения по оси Y
-  isRemoved: boolean;
+  private radius: number = 4;
+  private startAngle: number = 0;
+  private endAngle: number = 2 * Math.PI;
+  private movementXDirection: number;
+  isActive: boolean;
 
-  constructor({ x, y, color, speed, direction }: IProjectile) {
+  constructor({ x, y, color, speed, direction }: ProjectileParams) {
     this.x = x;
     this.y = y;
     this.color = color;
     this.speed = speed;
-    this.direction = direction; // Изначально направлен вверх, можно изменить в зависимости от нужд
-    this.isRemoved = false;
+    this.movementXDirection = direction;
+    this.isActive = false;
   }
 
   update(
@@ -38,15 +36,35 @@ class Projectile implements IProjectile {
     heroes: Hero[],
     setScore: Dispatch<SetStateAction<Array<number>>>,
   ) {
-    // Обновление позиции заклинания
-    this.x += this.speed * this.direction;
+    this.manageMovement();
+    this.manageCollision(heroes, setScore, canvas);
+    this.paintProjectile(ctx);
+  }
 
-    // Проверка столкновений с границами канваса
+  manageMovement() {
+    this.x += this.speed * this.movementXDirection;
+  }
+
+  manageCollision(
+    heroes: Hero[],
+    setScore: Dispatch<SetStateAction<Array<number>>>,
+    canvas: HTMLCanvasElement,
+  ) {
+    this.manageHeroCollision(heroes, setScore);
+    this.manageBorderCollision(canvas);
+  }
+
+  manageBorderCollision(canvas: HTMLCanvasElement) {
     if (this.x < 0 || this.x > canvas.width) {
-      this.remove(); // Удалить заклинание, если оно вышло за границу
+      this.remove();
       return;
     }
+  }
 
+  manageHeroCollision(
+    heroes: Hero[],
+    setScore: Dispatch<SetStateAction<Array<number>>>,
+  ) {
     heroes.forEach((hero, heroIndex) => {
       const distanceX = this.x - hero.x;
       const distanceY = this.y - hero.y;
@@ -62,8 +80,9 @@ class Projectile implements IProjectile {
         this.remove();
       }
     });
+  }
 
-    // Отрисовка заклинания
+  paintProjectile(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, this.startAngle, this.endAngle);
     ctx.fillStyle = this.color;
@@ -72,7 +91,7 @@ class Projectile implements IProjectile {
   }
 
   remove() {
-    this.isRemoved = true;
+    this.isActive = true;
   }
 }
 
