@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction } from 'react';
 import { ProjectileManager } from './index.ts';
 
 interface HeroParams {
@@ -9,20 +8,20 @@ interface HeroParams {
   projectileDirection: number;
   shootingFrequency: number;
   projectileColor: string;
+  onHitCallback: (heroIndex: number, hits: number) => void;
 }
 
 class Hero {
   x: number;
   y: number;
   speed: number;
+  shootingFrequency: number;
+  hits: number = 0;
+  radius: number = 10;
   private readonly color: string;
-
-  private shootingFrequency: number;
-  private shootingInterval: ReturnType<typeof setInterval>;
   private projectileManager: ProjectileManager;
-
-  public hits: number = 0;
-  public radius: number = 10;
+  private onHitCallback: (heroIndex: number, hits: number) => void;
+  private shootingInterval: ReturnType<typeof setInterval>;
   private movementYDirection: number = 1;
   private readonly startAngle: number = 0;
   private readonly endAngle: number = 2 * Math.PI;
@@ -35,6 +34,7 @@ class Hero {
     speed,
     projectileColor,
     projectileDirection,
+    onHitCallback,
   }: HeroParams) {
     this.x = x;
     this.y = y;
@@ -45,6 +45,7 @@ class Hero {
       projectileDirection,
     );
     this.manageShooting(shootingFrequency);
+    this.onHitCallback = onHitCallback;
   }
 
   manageShooting(shootingFrequency: number) {
@@ -56,34 +57,48 @@ class Hero {
     );
   }
 
-  clearShootingInterval() {
-    if (this.shootingInterval) {
-      clearInterval(this.shootingInterval);
-    }
-  }
-
-  shoot(projectileSpeed: number = 1) {
-    this.projectileManager.addProjectile(
-      this.x,
-      this.y,
-      this.radius,
-      projectileSpeed,
-    );
-  }
-
   increaseHitCount(amount: number = 1) {
     this.hits += amount;
+  }
+
+  handleHeroHit(heroIndex: number) {
+    this.increaseHitCount();
+    if (this.onHitCallback) {
+      this.onHitCallback(heroIndex, this.hits);
+    }
   }
 
   update(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
     heroes: Hero[],
-    setScore: Dispatch<SetStateAction<Array<number>>>,
   ) {
-    this.projectileManager.updateProjectiles(ctx, canvas, heroes, setScore);
+    this.projectileManager.updateProjectiles(ctx, canvas, heroes);
     this.manageMovement(canvas);
     this.paintHero(ctx);
+  }
+
+  setProjectileColor(color: string) {
+    this.projectileManager.projectileColor = color;
+  }
+
+  getProjectileColor(): string {
+    return this.projectileManager.projectileColor;
+  }
+
+  private clearShootingInterval() {
+    if (this.shootingInterval) {
+      clearInterval(this.shootingInterval);
+    }
+  }
+
+  private shoot(projectileSpeed: number = 1) {
+    this.projectileManager.addProjectile(
+      this.x,
+      this.y,
+      this.radius,
+      projectileSpeed,
+    );
   }
 
   private manageMovement(canvas: HTMLCanvasElement) {
