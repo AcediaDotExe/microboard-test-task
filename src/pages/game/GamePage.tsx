@@ -6,8 +6,7 @@ import { GameController, ScoreDisplay } from '../../features/game';
 import './GamePage.scss';
 
 const GamePage: FC = () => {
-  const { heroes, score, setScore, onSpeedChange, onFrequencyChange } =
-    useHeroes();
+  const { heroes, score, onSpeedChange, onFrequencyChange } = useHeroes();
   const { selectedHeroIndex, isModalOpen, handleOpenModal, handleCloseModal } =
     useHeroSelection();
 
@@ -25,12 +24,7 @@ const GamePage: FC = () => {
     <>
       <ScoreDisplay score={score} />
       <div className="gameContainer">
-        <Canvas
-          heroes={heroes}
-          handleOpenModal={handleOpenModal}
-          setSelectedHeroIndex={handleOpenModal}
-          setScore={setScore}
-        />
+        <Canvas heroes={heroes} handleOpenModal={handleOpenModal} />
       </div>
       <h3 className="alignCenter">
         Click on the hero to change the color of the spell

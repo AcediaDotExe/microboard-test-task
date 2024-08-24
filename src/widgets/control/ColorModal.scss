@@ -1,4 +1,4 @@
-@import 'src/shared/config/styles/variables.module';
+@import '../../shared/config/styles/variables.module';
 
 .modal-overlay {
   position: absolute;
@@ -32,12 +32,12 @@
 .color-input[type='color'] {
   margin-left: 10px;
   border-radius: 5px;
-  background-color: $background-light-color;
+  background-color: $primary-color;
 }
 
 .modal-button {
   margin: 10px;
   padding: 10px;
-  background-color: $background-light-color;
+  background-color: $primary-color;
   border-radius: 10px;
 }

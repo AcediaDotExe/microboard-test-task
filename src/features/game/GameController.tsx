@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, memo } from 'react';
 import ControlPanel from '../../widgets/control/СontrolPanel.tsx';
 import { Hero } from '../../entities/game';
 import './GameController.scss';
@@ -9,29 +9,27 @@ interface GameControllerProps {
   onFrequencyChange: (index: number, frequency: number) => void;
 }
 
-const GameController: FC<GameControllerProps> = ({
-  heroes,
-  onSpeedChange,
-  onFrequencyChange,
-}) => {
-  return (
-    <div className="gameController">
-      {heroes.map((hero, index) => (
-        <div key={index}>
-          <h3>Hero {index}</h3>
-          <ControlPanel
-            index={index}
-            initialOpt={{
-              speed: hero.speed,
-              frequency: hero.shootingFrequency,
-            }}
-            onSpeedChange={onSpeedChange}
-            onFrequencyChange={onFrequencyChange}
-          />
-        </div>
-      ))}
-    </div>
-  );
-};
+const GameController: FC<GameControllerProps> = memo(
+  ({ heroes, onSpeedChange, onFrequencyChange }) => {
+    return (
+      <div className="gameController">
+        {heroes.map((hero, index) => (
+          <div key={index}>
+            <h3>Hero {index}</h3>
+            <ControlPanel
+              index={index}
+              initialOpt={{
+                speed: hero.speed,
+                frequency: hero.shootingFrequency,
+              }}
+              onSpeedChange={onSpeedChange}
+              onFrequencyChange={onFrequencyChange}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  },
+);
 
 export default GameController;

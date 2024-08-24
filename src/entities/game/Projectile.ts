@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction } from 'react';
 import { Hero } from './index.ts';
 
 interface ProjectileParams {
@@ -12,14 +11,14 @@ interface ProjectileParams {
 class Projectile {
   x: number;
   y: number;
-  private color: string;
-  private speed: number;
+  private readonly color: string;
+  private readonly speed: number;
+  private readonly movementXDirection: number;
+  isActive: boolean;
 
   private radius: number = 4;
   private startAngle: number = 0;
   private endAngle: number = 2 * Math.PI;
-  private movementXDirection: number;
-  isActive: boolean;
 
   constructor({ x, y, color, speed, direction }: ProjectileParams) {
     this.x = x;
@@ -33,11 +32,10 @@ class Projectile {
   update(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
-    heroes: Hero[],
-    setScore: Dispatch<SetStateAction<Array<number>>>,
+    heroes: ReadonlyArray<Hero>,
   ) {
     this.manageMovement();
-    this.manageCollision(heroes, setScore, canvas);
+    this.manageCollision(heroes, canvas);
     this.paintProjectile(ctx);
   }
 
@@ -45,12 +43,8 @@ class Projectile {
     this.x += this.speed * this.movementXDirection;
   }
 
-  manageCollision(
-    heroes: Hero[],
-    setScore: Dispatch<SetStateAction<Array<number>>>,
-    canvas: HTMLCanvasElement,
-  ) {
-    this.manageHeroCollision(heroes, setScore);
+  manageCollision(heroes: ReadonlyArray<Hero>, canvas: HTMLCanvasElement) {
+    this.manageHeroCollision(heroes);
     this.manageBorderCollision(canvas);
   }
 
@@ -61,22 +55,14 @@ class Projectile {
     }
   }
 
-  manageHeroCollision(
-    heroes: Hero[],
-    setScore: Dispatch<SetStateAction<Array<number>>>,
-  ) {
+  manageHeroCollision(heroes: ReadonlyArray<Hero>) {
     heroes.forEach((hero, heroIndex) => {
       const distanceX = this.x - hero.x;
       const distanceY = this.y - hero.y;
       const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 
       if (distance < hero.radius + this.radius) {
-        hero.increaseHitCount();
-        setScore((prevScores) => {
-          const newScores = [...prevScores];
-          newScores[heroIndex] = hero.hits;
-          return newScores;
-        });
+        hero.handleHeroHit(heroIndex);
         this.remove();
       }
     });

@@ -1,8 +1,8 @@
 import { FC } from 'react';
-import Game from '../pages/game';
+import GamePage from '../pages/game/GamePage.tsx';
 
 const App: FC = () => {
-  return <Game />;
+  return <GamePage />;
 };
 
 export default App;

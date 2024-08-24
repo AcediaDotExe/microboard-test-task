@@ -1,6 +1,8 @@
 import { ProjectileManager } from './index.ts';
+import { Position } from '../../shared/types/globals.ts';
 
 interface HeroParams {
+  id: number;
   x: number;
   y: number;
   color: string;
@@ -12,21 +14,23 @@ interface HeroParams {
 }
 
 class Hero {
+  id: number;
   x: number;
   y: number;
   speed: number;
-  shootingFrequency: number;
+  shootingFrequency: number = 0;
   hits: number = 0;
   radius: number = 10;
-  private readonly color: string;
   private projectileManager: ProjectileManager;
-  private onHitCallback: (heroIndex: number, hits: number) => void;
-  private shootingInterval: ReturnType<typeof setInterval>;
+  private shootingInterval: ReturnType<typeof setInterval> | null = null;
   private movementYDirection: number = 1;
   private readonly startAngle: number = 0;
   private readonly endAngle: number = 2 * Math.PI;
+  private readonly onHitCallback: (heroIndex: number, hits: number) => void;
+  private readonly color: string;
 
   constructor({
+    id,
     x,
     y,
     color,
@@ -36,6 +40,7 @@ class Hero {
     projectileDirection,
     onHitCallback,
   }: HeroParams) {
+    this.id = id;
     this.x = x;
     this.y = y;
     this.color = color;
@@ -68,10 +73,20 @@ class Hero {
     }
   }
 
+  changeDirection() {
+    this.movementYDirection *= -1;
+  }
+
+  public getDistanceBetweenMouseAndHero(mousePosition: Position): number {
+    const distanceX = this.x - mousePosition.x;
+    const distanceY = this.y - mousePosition.y;
+    return Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+  }
+
   update(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
-    heroes: Hero[],
+    heroes: ReadonlyArray<Hero>,
   ) {
     this.projectileManager.updateProjectiles(ctx, canvas, heroes);
     this.manageMovement(canvas);
