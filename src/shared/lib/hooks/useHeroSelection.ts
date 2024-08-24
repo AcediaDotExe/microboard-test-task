@@ -18,8 +18,11 @@ export const useHeroSelection = () => {
 
   return {
     selectedHeroIndex,
+    setSelectedHeroIndex,
     isModalOpen,
     handleOpenModal,
     handleCloseModal,
   };
 };
+
+export default useHeroSelection;

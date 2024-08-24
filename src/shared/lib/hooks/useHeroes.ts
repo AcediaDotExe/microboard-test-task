@@ -15,6 +15,7 @@ export const useHeroes = () => {
 
   const heroesRef = useRef<Hero[]>([
     new Hero({
+      id: 0,
       x: 0,
       y: 10,
       color: colors.primary,
@@ -25,6 +26,7 @@ export const useHeroes = () => {
       onHitCallback: handleHeroHit,
     }),
     new Hero({
+      id: 1,
       x: 0,
       y: 10,
       color: colors.primary,
@@ -54,3 +56,5 @@ export const useHeroes = () => {
     onFrequencyChange,
   };
 };
+
+export default useHeroes;
