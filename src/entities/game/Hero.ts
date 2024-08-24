@@ -1,8 +1,8 @@
-// src/entities/Hero.ts
-import Projectile from './Projectile.ts';
-import { Dispatch, SetStateAction } from 'react';
+import { ProjectileManager } from './index.ts';
+import { Position } from '../../shared/types/globals.ts';
 
-export interface IHero {
+interface HeroParams {
+  id: number;
   x: number;
   y: number;
   color: string;
@@ -10,26 +10,27 @@ export interface IHero {
   projectileDirection: number;
   shootingFrequency: number;
   projectileColor: string;
+  onHitCallback: (heroIndex: number, hits: number) => void;
 }
 
-class Hero implements IHero {
+class Hero {
+  id: number;
   x: number;
   y: number;
-  color: string;
   speed: number;
-  direction: number;
-  shootingFrequency: number;
-  projectileColor: string;
-  projectileDirection: number;
-  projectiles: Projectile[] = [];
-  hits: number;
-  shootInterval: ReturnType<typeof setInterval>;
-
+  shootingFrequency: number = 0;
+  hits: number = 0;
   radius: number = 10;
-  startAngle: number = 0;
-  endAngle: number = 2 * Math.PI;
+  private projectileManager: ProjectileManager;
+  private shootingInterval: ReturnType<typeof setInterval> | null = null;
+  private movementYDirection: number = 1;
+  private readonly startAngle: number = 0;
+  private readonly endAngle: number = 2 * Math.PI;
+  private readonly onHitCallback: (heroIndex: number, hits: number) => void;
+  private readonly color: string;
 
   constructor({
+    id,
     x,
     y,
     color,
@@ -37,68 +38,97 @@ class Hero implements IHero {
     speed,
     projectileColor,
     projectileDirection,
-  }: IHero) {
+    onHitCallback,
+  }: HeroParams) {
+    this.id = id;
     this.x = x;
     this.y = y;
     this.color = color;
     this.speed = speed;
+    this.projectileManager = new ProjectileManager(
+      projectileColor,
+      projectileDirection,
+    );
+    this.manageShooting(shootingFrequency);
+    this.onHitCallback = onHitCallback;
+  }
+
+  manageShooting(shootingFrequency: number) {
+    this.clearShootingInterval();
     this.shootingFrequency = shootingFrequency;
-    this.projectileColor = projectileColor;
-    this.direction = 1;
-    this.projectileDirection = projectileDirection;
-    this.hits = 0;
-    this.shoot = this.shoot.bind(this);
-    this.shootInterval = setInterval(
+    this.shootingInterval = setInterval(
       () => this.shoot(),
       1000 / this.shootingFrequency,
     );
   }
 
-  increaseHitCount() {
-    this.hits += 1;
+  increaseHitCount(amount: number = 1) {
+    this.hits += amount;
+  }
+
+  handleHeroHit(heroIndex: number) {
+    this.increaseHitCount();
+    if (this.onHitCallback) {
+      this.onHitCallback(heroIndex, this.hits);
+    }
+  }
+
+  changeDirection() {
+    this.movementYDirection *= -1;
+  }
+
+  public getDistanceBetweenMouseAndHero(mousePosition: Position): number {
+    const distanceX = this.x - mousePosition.x;
+    const distanceY = this.y - mousePosition.y;
+    return Math.sqrt(distanceX * distanceX + distanceY * distanceY);
   }
 
   update(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
-    heroes: Hero[],
-    setScore: Dispatch<SetStateAction<Array<number>>>,
+    heroes: ReadonlyArray<Hero>,
   ) {
-    this.projectiles = this.projectiles.filter(
-      (projectile) => !projectile.isRemoved,
-    );
-    // Обновление и отрисовка заклинаний
-    this.projectiles.forEach((projectile, index) => {
-      projectile.update(ctx, canvas, heroes, setScore);
-      // Логика столкновения заклинания с границей
-      if (projectile.y <= 0 || projectile.y >= canvas.height) {
-        this.projectiles.splice(index, 1); // Удаление заклинания при выходе за границу
-      }
-    });
+    this.projectileManager.updateProjectiles(ctx, canvas, heroes);
+    this.manageMovement(canvas);
+    this.paintHero(ctx);
+  }
 
-    // Логика движения
-    this.y += this.speed * this.direction;
+  setProjectileColor(color: string) {
+    this.projectileManager.projectileColor = color;
+  }
 
-    // Отталкивание от границ поля
-    if (this.y <= 0 || this.y >= canvas.height) {
-      this.direction *= -1;
+  getProjectileColor(): string {
+    return this.projectileManager.projectileColor;
+  }
+
+  private clearShootingInterval() {
+    if (this.shootingInterval) {
+      clearInterval(this.shootingInterval);
     }
+  }
 
+  private shoot(projectileSpeed: number = 1) {
+    this.projectileManager.addProjectile(
+      this.x,
+      this.y,
+      this.radius,
+      projectileSpeed,
+    );
+  }
+
+  private manageMovement(canvas: HTMLCanvasElement) {
+    this.y += this.speed * this.movementYDirection;
+
+    if (this.y <= 0 || this.y >= canvas.height) {
+      this.movementYDirection *= -1;
+    }
+  }
+
+  private paintHero(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, this.startAngle, this.endAngle);
     ctx.fillStyle = this.color;
     ctx.fill();
-  }
-
-  shoot() {
-    const projectile = new Projectile({
-      x: this.x + this.projectileDirection * this.radius * 2,
-      y: this.y,
-      color: this.projectileColor,
-      speed: 1,
-      direction: this.projectileDirection,
-    });
-    this.projectiles.push(projectile);
   }
 }
 
