@@ -3,12 +3,14 @@ import { Hero } from '../../../entities/game';
 import { Position } from '../../types/globals.ts';
 import { colors } from '../../config/styles/variables.ts';
 
-const mouseProximityRadius: number = 20;
+const mouseProximityRadius: number = 30;
+const debounceTime: number = 50;
 const useHeroAnimation = (
   canvasRef: RefObject<HTMLCanvasElement>,
   heroes: ReadonlyArray<Hero>,
   mousePositionRef: MutableRefObject<Position>,
 ) => {
+  const lastDirectionChangeTimeRef = useRef<number>(0);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
@@ -26,7 +28,7 @@ const useHeroAnimation = (
             const distance = hero.getDistanceBetweenMouseAndHero(
               mousePositionRef.current,
             );
-            if (distance < mouseProximityRadius) {
+            if (distance < mouseProximityRadius && (now - lastDirectionChangeTimeRef.current > debounceTime)) {
               hero.changeDirection();
             }
           });
