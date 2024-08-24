@@ -3,7 +3,7 @@ import { Hero } from '../../../entities/game';
 import { Position } from '../../types/globals.ts';
 import { colors } from '../../config/styles/variables.ts';
 
-const mouseProximityRadius: number = 40;
+const mouseProximityRadius: number = 20;
 const useHeroAnimation = (
   canvasRef: RefObject<HTMLCanvasElement>,
   heroes: ReadonlyArray<Hero>,
